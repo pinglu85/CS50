@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-// Create a lookup array for subitition.
+// Create a lookup array for substitution.
 char lookup[25];
 
 int validateKey(string str);
