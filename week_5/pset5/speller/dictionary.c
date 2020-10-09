@@ -13,8 +13,7 @@ typedef struct node
 {
     char word[LENGTH + 1];
     struct node *next;
-}
-node;
+} node;
 
 // Number of buckets in hash table
 const unsigned int N = 143091;
@@ -117,6 +116,11 @@ bool load(const char *dictionary)
 
             // Create a new node and copy the word into the node.
             node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return false;
+            }
+
             strcpy(n->word, wordInDict);
 
             // Check hash collision. If there is a collision,
@@ -137,7 +141,6 @@ bool load(const char *dictionary)
             // Prepare for next word
             wordIndex = 0;
         }
-
     }
     // Close the dictionary file.
     fclose(dict);
