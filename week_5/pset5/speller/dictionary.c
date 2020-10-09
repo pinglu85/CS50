@@ -91,56 +91,49 @@ bool load(const char *dictionary)
     }
 
     char wordInDict[LENGTH + 1];
-    int wordIndex = 0;
 
-    // Get each word in the dictionary.
-    for (int c = fgetc(dict); c != EOF; c = fgetc(dict))
+    // Read each word in the dictionary and store them
+    // into the hash table.
+    while (1)
     {
-        // If current character is alphabetical or apostroph,
-        // append it to the wordInDict.
-        if (isalpha(c) || c == '\'')
+        // Read a word.
+        fscanf(dict, "%s", wordInDict);
+
+        // If reach the end of the file,
+        // stop the while loop.
+        if (feof(dict))
         {
-            wordInDict[wordIndex] = c;
-            wordIndex++;
+            break;
         }
-        // We must have found a word.
-        else if (wordIndex > 0)
+
+        // Hash the word.
+        unsigned int hashValue = hash(wordInDict);
+        // Calculate the hash table index of the word.
+        unsigned int hashTableIndex = hashValue % N;
+
+        // Create a new node and copy the word into the node.
+        node *n = malloc(sizeof(node));
+        if (n == NULL)
         {
-            // Terminate current word.
-            wordInDict[wordIndex] = '\0';
-
-            // Hash the word.
-            unsigned int hashValue = hash(wordInDict);
-            // Calculate the hash table index of the word.
-            unsigned int hashTableIndex = hashValue % N;
-
-            // Create a new node and copy the word into the node.
-            node *n = malloc(sizeof(node));
-            if (n == NULL)
-            {
-                return false;
-            }
-
-            strcpy(n->word, wordInDict);
-
-            // Check hash collision. If there is a collision,
-            if (table[hashTableIndex] != NULL)
-            {
-                // ...insert current node to the front of the linked list.
-                n->next = table[hashTableIndex];
-            }
-            // Otherwise set node's next pointer to NULL.
-            else
-            {
-                n->next = NULL;
-            }
-
-            // Store the node to the hash table.
-            table[hashTableIndex] = n;
-
-            // Prepare for next word
-            wordIndex = 0;
+            return false;
         }
+
+        strcpy(n->word, wordInDict);
+
+        // Check hash collision. If there is a collision,
+        if (table[hashTableIndex] != NULL)
+        {
+            // ...insert current node to the front of the linked list.
+            n->next = table[hashTableIndex];
+        }
+        // Otherwise set node's next pointer to NULL.
+        else
+        {
+            n->next = NULL;
+        }
+
+        // Store the node to the hash table.
+        table[hashTableIndex] = n;
     }
     // Close the dictionary file.
     fclose(dict);
