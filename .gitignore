@@ -68,3 +68,6 @@ Temporary Items
 
 # Unignore 
 !week_5/pset5/speller/dictionaries/*
+
+# Object files
+*.o
