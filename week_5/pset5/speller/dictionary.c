@@ -36,24 +36,11 @@ bool check(const char *word)
     // Terminate lowercased word.
     lowerCased[wordIndex] = '\0';
 
-    // CHeck if the word is a common one.
-    char *commonWords[] = {"a", "the", "at", "my", "and", "to", "from", "each", "do"};
-    int numberOfCommonWords = 9;
-    for (int i = 0; i < 9; i++)
-    {
-        if (strcmp(lowerCased, commonWords[i]) == 0)
-        {
-            return true;
-        }
-    }
-
     // Hash the word.
     unsigned int hashValue = hash(lowerCased);
-    // Calculate the hash table index of the word.
-    unsigned int hashTableIndex = hashValue % N;
 
     // Compare the word with the one in hash table, if matched return true.
-    for (node *n = table[hashTableIndex]; n != NULL; n = n->next)
+    for (node *n = table[hashValue]; n != NULL; n = n->next)
     {
         if (strcmp(lowerCased, n->word) == 0)
         {
@@ -77,7 +64,8 @@ unsigned int hash(const char *word)
         hashVal = hashVal ^ *c;
         hashVal *= FNV_PRIME;
     }
-    return hashVal;
+    // Calculate the index in the hash table.
+    return hashVal % N;
 }
 
 // Loads dictionary into memory, returning true if successful else false
@@ -90,27 +78,10 @@ bool load(const char *dictionary)
         return false;
     }
 
-    char wordInDict[LENGTH + 1];
-
-    // Read each word in the dictionary and store them
-    // into the hash table.
+    // Read each word in the dictionary and
+    // store them into the hash table.
     while (1)
     {
-        // Read a word.
-        fscanf(dict, "%s", wordInDict);
-
-        // If reach the end of the file,
-        // stop the while loop.
-        if (feof(dict))
-        {
-            break;
-        }
-
-        // Hash the word.
-        unsigned int hashValue = hash(wordInDict);
-        // Calculate the hash table index of the word.
-        unsigned int hashTableIndex = hashValue % N;
-
         // Create a new node and copy the word into the node.
         node *n = malloc(sizeof(node));
         if (n == NULL)
@@ -118,23 +89,28 @@ bool load(const char *dictionary)
             return false;
         }
 
-        strcpy(n->word, wordInDict);
+        // Read a word and store it into the node's word.
+        fscanf(dict, "%s", n->word);
 
-        // Check hash collision. If there is a collision,
-        if (table[hashTableIndex] != NULL)
+        // If reach end of the file, free last node
+        // and stop the while loop.
+        if (feof(dict))
         {
-            // ...insert current node to the front of the linked list.
-            n->next = table[hashTableIndex];
+            free(n);
+            break;
         }
-        // Otherwise set node's next pointer to NULL.
-        else
-        {
-            n->next = NULL;
-        }
+
+        // Hash the word.
+        unsigned int hashValue = hash(n->word);
+
+        // Insert current node to the front of the linked list
+        // at the corresponding index in the hash table.
+        n->next = table[hashValue];
 
         // Store the node to the hash table.
-        table[hashTableIndex] = n;
+        table[hashValue] = n;
     }
+
     // Close the dictionary file.
     fclose(dict);
 
