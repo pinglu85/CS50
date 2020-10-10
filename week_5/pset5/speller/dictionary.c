@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "dictionary.h"
 
@@ -75,51 +79,83 @@ unsigned int hash(const char *word)
 bool load(const char *dictionary)
 {
     // Open the dictionary file.
-    FILE *dict = fopen(dictionary, "r");
-    if (dict == NULL)
+    int dict = open(dictionary, O_RDONLY);
+    if (dict == -1)
     {
         return false;
     }
 
-    // Read each word in the dictionary and
-    // store them into the hash table.
-    while (1)
+    // Prepare for getting dictionary file info
+    struct stat dictInfo = {0};
+    // Error getting the file size
+    if (fstat(dict, &dictInfo) == -1)
     {
-        // Create a new node and copy the word into the node.
-        node *n = malloc(sizeof(node));
-        if (n == NULL)
-        {
-            return false;
-        }
-
-        // Read a word and store it into the node's word.
-        fscanf(dict, "%s", n->word);
-
-        // Increase number of words in dictionary by 1.
-        numOfWordsInDict++;
-
-        // If reach end of the file, free last node
-        // and stop the while loop.
-        if (feof(dict))
-        {
-            free(n);
-            numOfWordsInDict--;
-            break;
-        }
-
-        // Hash the word.
-        unsigned int hashValue = hash(n->word);
-
-        // Insert current node to the front of the linked list
-        // at the corresponding index in the hash table.
-        n->next = table[hashValue];
-
-        // Store the node to the hash table.
-        table[hashValue] = n;
+        return false;
     }
 
+    // Load the whole dictionary into memory using memory mapping.
+    char *map = mmap(0, dictInfo.st_size, PROT_READ, MAP_SHARED, dict, 0);
+    // Error mmapping the file
+    if (map == MAP_FAILED)
+    {
+        close(dict);
+        return false;
+    }
     // Close the dictionary file.
-    fclose(dict);
+    close(dict);
+
+    char word[LENGTH + 1];
+    int wordIndex = 0;
+
+    // Read each word in the dictionary and
+    // store them into the hash table.
+    for (off_t i = 0; i < dictInfo.st_size; i++)
+    {
+        // We must found a word.
+        if (map[i] == '\n')
+        {
+            // Terminate current word.
+            word[wordIndex] = '\0';
+            // Hash current word.
+            unsigned int hashValue = hash(word);
+
+            // Create a new node.
+            node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return false;
+            }
+
+            // Copy word into the node's word.
+            strcpy(n->word, word);
+
+            // Insert current node to the front of the linked list
+            // at the corresponding index in the hash table.
+            n->next = table[hashValue];
+
+            // Store the node to the hash table.
+            table[hashValue] = n;
+
+            // Increase number of words in dictionary by 1.
+            numOfWordsInDict++;
+            // Prepare for new word.
+            wordIndex = 0;
+        }
+        else
+        {
+            // Append character to word.
+            word[wordIndex] = map[i];
+            // Increase wordIndex by 1.
+            wordIndex++;
+        }
+    }
+
+    int err = munmap(map, dictInfo.st_size);
+    // UnMapping failed.
+    if (err != 0)
+    {
+        return false;
+    }
 
     return true;
 }
