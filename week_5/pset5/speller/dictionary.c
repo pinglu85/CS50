@@ -21,6 +21,9 @@ const unsigned int N = 143091;
 // Hash table
 node *table[N];
 
+// Number of words in dictionary
+unsigned int numOfWordsInDict = 0;
+
 // Returns true if word is in dictionary else false
 bool check(const char *word)
 {
@@ -92,11 +95,15 @@ bool load(const char *dictionary)
         // Read a word and store it into the node's word.
         fscanf(dict, "%s", n->word);
 
+        // Increase number of words in dictionary by 1.
+        numOfWordsInDict++;
+
         // If reach end of the file, free last node
         // and stop the while loop.
         if (feof(dict))
         {
             free(n);
+            numOfWordsInDict--;
             break;
         }
 
@@ -120,24 +127,7 @@ bool load(const char *dictionary)
 // Returns number of words in dictionary if loaded else 0 if not yet loaded
 unsigned int size(void)
 {
-    unsigned int numberOfWords = 0;
-
-    // Loop through the hash table.
-    for (int i = 0; i < N; i++)
-    {
-        node *n = table[i];
-
-        // If current ith pointer in the table points to a linked list,
-        // which means there is at least one word stored at current index,
-        // traverse the linked list until we reach the end of the list.
-        while (n != NULL)
-        {
-            // Increase number of words by 1.
-            numberOfWords++;
-            n = n->next;
-        }
-    }
-    return numberOfWords;
+    return numOfWordsInDict;
 }
 
 // Unloads dictionary from memory, returning true if successful else false
