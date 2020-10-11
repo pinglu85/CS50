@@ -61,15 +61,11 @@ bool check(const char *word)
 // Hashes word to a number
 unsigned int hash(const char *word)
 {
-    // Implement FNV-1a. FNV Hash: http://isthe.com/chongo/tech/comp/fnv/
-    const unsigned int OFFSET_BASIS = 2166136261;
-    const unsigned int FNV_PRIME = 16777619;
-
-    unsigned int hashVal = OFFSET_BASIS;
+    // Kernighan and Ritchie's function https://www.strchr.com/hash_functions
+    unsigned int hashVal = 5381;
     for (const char *c = word; *c != '\0'; c++)
     {
-        hashVal = hashVal ^ *c;
-        hashVal *= FNV_PRIME;
+        hashVal = hashVal * 33 + *c;
     }
     // Calculate the index in the hash table.
     return hashVal % N;
