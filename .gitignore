@@ -71,3 +71,6 @@ Temporary Items
 
 # Object files
 *.o
+
+# .env files
+.env
