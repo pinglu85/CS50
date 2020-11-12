@@ -14,7 +14,7 @@ class NoteViewController: UIViewController {
     
     // Handle note deletion
     @IBAction func deleteButton(_ sender: UIBarItem) {
-        // Show delete confirmation dialogue; pass function deleteNote as action button's closure
+        // Show delete confirmation dialogue and pass function deleteNote as action button's closure
         showSheetAlertWithOneAction(
             messageText: "This note will be deleted. This action cannot be undone.",
             actionButtonText: "Delete Note",
